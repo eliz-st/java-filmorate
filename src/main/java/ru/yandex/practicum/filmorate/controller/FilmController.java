@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.controller;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -41,7 +42,7 @@ public class FilmController {
 
         if (!films.containsKey(film.getId())) {
             log.warn("Ошибка обновления фильма: фильм с таким id {} не найден", film.getId());
-            throw new ValidationException("Фильм с таким id не найден");
+            throw new NotFoundException("Фильм с таким id не найден");
         }
 
         films.put(film.getId(), film);

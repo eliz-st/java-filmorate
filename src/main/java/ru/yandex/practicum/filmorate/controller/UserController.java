@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -41,7 +42,7 @@ public class UserController {
 
         if (!users.containsKey(user.getId())) {
             log.warn("Ошибка обновления пользователя: пользователь с id {} не найден.", user.getId());
-            throw new ValidationException("Пользователь с таким id не найден");
+            throw new NotFoundException("Пользователь с таким id не найден");
         }
 
         users.put(user.getId(), user);
