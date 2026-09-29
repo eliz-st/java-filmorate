@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 public class FilmController {
     private final Map<Integer, Film> films = new HashMap<>();
     private int count = 0;
+    private static final LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, 12, 28);
 
     @PostMapping
     public Film createFilm(@RequestBody Film film) {
@@ -32,6 +33,7 @@ public class FilmController {
 
     @GetMapping
     public Collection<Film> getFilms() {
+        log.info("Получен запрос на получение списка фильмов");
         return films.values();
     }
 
@@ -67,7 +69,7 @@ public class FilmController {
         }
 
         if (film.getReleaseDate() != null
-                && film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
+                && film.getReleaseDate().isBefore(CINEMA_BIRTHDAY)) {
             log.warn("Ошибка валидации фильма: дата релиза не может быть раньше 28 декабря 1895 года");
             throw new ValidationException("Дата релиза фильма не может быть раньше 28 декабря 1895 года");
         }

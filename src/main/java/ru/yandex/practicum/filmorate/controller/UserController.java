@@ -32,6 +32,8 @@ public class UserController {
 
     @GetMapping
     public Collection<User> getUsers() {
+
+        log.info("Получен запрос на получение списка пользователей");
         return users.values();
     }
 
