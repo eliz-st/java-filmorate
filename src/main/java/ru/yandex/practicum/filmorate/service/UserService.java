@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -21,7 +22,7 @@ public class UserService {
     }
 
     public User createUser(User user) {
-        return  userStorage.createUser(user);
+        return userStorage.createUser(user);
     }
 
     public Collection<User> getUsers() {
@@ -38,6 +39,11 @@ public class UserService {
     }
 
     public void addFriend(int userId, int friendId) {
+
+        if (userId == friendId) {
+            throw new ValidationException("Пользователь не может добавить самого себя в друзья");
+        }
+
         User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
 
@@ -46,6 +52,11 @@ public class UserService {
     }
 
     public void removeFriend(int userId, int friendId) {
+
+        if (userId == friendId) {
+            throw new ValidationException("Пользователь не может удалить самого себя из друзей");
+        }
+
         User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
 
@@ -67,6 +78,11 @@ public class UserService {
     }
 
     public Set<User> getCommonFriends(int userId, int otherId) {
+
+        if (userId == otherId) {
+            throw new ValidationException("Нельзя искать общих друзей пользователя с самим собой");
+        }
+
         User user = getUserOrThrow(userId);
         User otherUser = getUserOrThrow(otherId);
 
@@ -83,12 +99,8 @@ public class UserService {
     }
 
     private User getUserOrThrow(int userId) {
-        User user = userStorage.getUserById(userId);
-
-        if (user == null) {
-            throw new NotFoundException("Пользователь с таким id не найден");
-        }
-
-        return user;
+        return userStorage.getUserById(userId)
+                .orElseThrow(() -> new NotFoundException(
+                        "Пользователь с id " + userId + " не найден"));
     }
 }
