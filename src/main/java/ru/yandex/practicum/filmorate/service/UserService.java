@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -17,7 +18,7 @@ public class UserService {
     private final UserStorage userStorage;
 
     @Autowired
-    public UserService(UserStorage userStorage) {
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
         this.userStorage = userStorage;
     }
 
@@ -44,11 +45,9 @@ public class UserService {
             throw new ValidationException("Пользователь не может добавить самого себя в друзья");
         }
 
-        User user = getUserOrThrow(userId);
-        User friend = getUserOrThrow(friendId);
-
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
+        getUserOrThrow(userId);
+        getUserOrThrow(friendId);
+        userStorage.addFriend(userId, friendId);
     }
 
     public void removeFriend(int userId, int friendId) {
@@ -57,11 +56,9 @@ public class UserService {
             throw new ValidationException("Пользователь не может удалить самого себя из друзей");
         }
 
-        User user = getUserOrThrow(userId);
-        User friend = getUserOrThrow(friendId);
-
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
+        getUserOrThrow(userId);
+        getUserOrThrow(friendId);
+        userStorage.removeFriend(userId, friendId);
     }
 
     public Set<User> getFriends(int userId) {
