@@ -64,14 +64,7 @@ public class UserService {
     public Set<User> getFriends(int userId) {
         User user = getUserOrThrow(userId);
 
-        Set<User> friends = new HashSet<>();
-
-        for (Integer friendId : user.getFriends()) {
-            User friend = getUserOrThrow(friendId);
-            friends.add(friend);
-        }
-
-        return friends;
+        return userStorage.getUsersByIds(user.getFriends());
     }
 
     public Set<User> getCommonFriends(int userId, int otherId) {
@@ -83,16 +76,10 @@ public class UserService {
         User user = getUserOrThrow(userId);
         User otherUser = getUserOrThrow(otherId);
 
-        Set<User> commonFriends = new HashSet<>();
+        Set<Integer> commonFriendIds = new HashSet<>(user.getFriends());
+        commonFriendIds.retainAll(otherUser.getFriends());
 
-        for (Integer friendId : user.getFriends()) {
-            if (otherUser.getFriends().contains(friendId)) {
-                User commonFriend = getUserOrThrow(friendId);
-                commonFriends.add(commonFriend);
-            }
-        }
-
-        return commonFriends;
+        return userStorage.getUsersByIds(commonFriendIds);
     }
 
     private User getUserOrThrow(int userId) {

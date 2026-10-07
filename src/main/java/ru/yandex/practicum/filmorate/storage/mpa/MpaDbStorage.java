@@ -8,7 +8,7 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 import java.util.List;
 
 @Repository
-public class MpaDbStorage {
+public class MpaDbStorage implements MpaStorage {
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM mpa WHERE mpa_id = ?";
     private static final String FIND_ALL_QUERY = "SELECT * FROM mpa ORDER BY mpa_id";
     private final JdbcTemplate jdbcTemplate;
@@ -17,6 +17,7 @@ public class MpaDbStorage {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    @Override
     public Mpa getMpaById(int id) {
         List<Mpa> mpaList = jdbcTemplate.query(FIND_BY_ID_QUERY, new MpaRowMapper(), id);
         if (mpaList.isEmpty()) {
@@ -26,6 +27,7 @@ public class MpaDbStorage {
         return mpaList.get(0);
     }
 
+    @Override
     public List<Mpa> getAllMpa() {
         return jdbcTemplate.query(FIND_ALL_QUERY, new MpaRowMapper());
     }

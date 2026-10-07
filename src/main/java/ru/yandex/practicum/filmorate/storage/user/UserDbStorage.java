@@ -23,10 +23,6 @@ public class UserDbStorage implements UserStorage {
             "DELETE FROM friends WHERE user_id = ? AND friend_id = ?";
     private static final String FIND_FRIENDS_QUERY =
             "SELECT friend_id FROM friends WHERE user_id = ?";
-    private static final String DELETE_USER_FRIENDS_QUERY =
-            "DELETE FROM friends WHERE user_id = ? OR friend_id = ?";
-    private static final String DELETE_USER_LIKES_QUERY =
-            "DELETE FROM likes WHERE user_id = ?";
 
     private final JdbcTemplate jdbcTemplate;
     private final SimpleJdbcInsert userInsert;
@@ -67,8 +63,6 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public void deleteUser(int id) {
-        jdbcTemplate.update(DELETE_USER_FRIENDS_QUERY, id, id);
-        jdbcTemplate.update(DELETE_USER_LIKES_QUERY, id);
         jdbcTemplate.update(DELETE_QUERY, id);
     }
 
@@ -88,20 +82,15 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public Collection<User> getUsers() {
-
-        List<User> users = jdbcTemplate.query(FIND_ALL_QUERY, new UserRowMapper());
-
-        for (User user : users) {
-            user.setFriends(getUserFriends(user.getId()));
-        }
-
-        return users;
+        return jdbcTemplate.query(FIND_ALL_QUERY, new UserRowMapper());
     }
 
+    @Override
     public void addFriend(int userId, int friendId) {
         jdbcTemplate.update(INSERT_FRIEND_QUERY, userId, friendId);
     }
 
+    @Override
     public void removeFriend(int userId, int friendId) {
         jdbcTemplate.update(DELETE_FRIEND_QUERY, userId, friendId);
     }
@@ -112,5 +101,18 @@ public class UserDbStorage implements UserStorage {
                         FIND_FRIENDS_QUERY,
                         (rs, rowNum) -> rs.getInt("friend_id"),
                         userId));
+    }
+
+    @Override
+    public Set<User> getUsersByIds(Set<Integer> ids) {
+        if (ids.isEmpty()) {
+            return new HashSet<>();
+        }
+
+        String placeholders = String.join(", ", Collections.nCopies(ids.size(), "?"));
+
+        String query = "SELECT * FROM users WHERE user_id IN (" + placeholders + ")";
+
+        return new HashSet<>(jdbcTemplate.query(query, new UserRowMapper(), ids.toArray()));
     }
 }

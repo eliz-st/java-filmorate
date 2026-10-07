@@ -9,13 +9,11 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
-import ru.yandex.practicum.filmorate.storage.mpa.MpaDbStorage;
+import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
+import ru.yandex.practicum.filmorate.storage.mpa.MpaStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -23,18 +21,18 @@ public class FilmService {
 
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
-    private final MpaDbStorage mpaDbStorage;
-    private final GenreDbStorage genreDbStorage;
+    private final MpaStorage mpaStorage;
+    private final GenreStorage genreStorage;
 
     @Autowired
     public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
                        @Qualifier("userDbStorage") UserStorage userStorage,
-                       MpaDbStorage mpaDbStorage,
-                       GenreDbStorage genreDbStorage) {
+                       MpaStorage mpaStorage,
+                       GenreStorage genreStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
-        this.mpaDbStorage = mpaDbStorage;
-        this.genreDbStorage = genreDbStorage;
+        this.mpaStorage = mpaStorage;
+        this.genreStorage = genreStorage;
     }
 
     public Film createFilm(Film film) {
@@ -73,16 +71,21 @@ public class FilmService {
             throw new ValidationException("Количество фильмов должно быть больше нуля");
         }
 
-        List<Film> films = new ArrayList<>(filmStorage.getFilms());
-        films.sort(Comparator.comparingInt((Film film) -> film.getLikes().size()).reversed());
-        return films.subList(0, Math.min(count, films.size()));
+        return filmStorage.getPopularFilms(count);
     }
 
     private void validateMpaAndGenres(Film film) {
-        mpaDbStorage.getMpaById(film.getMpa().getId());
+        mpaStorage.getMpaById(film.getMpa().getId());
 
-        for (Genre genre : film.getGenres()) {
-            genreDbStorage.getGenreById(genre.getId());
+        List<Integer> genreIds = film.getGenres().stream()
+                .map(Genre::getId)
+                .distinct()
+                .toList();
+
+        List<Genre> foundGenres = genreStorage.getGenresByIds(genreIds);
+
+        if (foundGenres.size() < genreIds.size()) {
+            throw new NotFoundException("Один или несколько жанров не найдены");
         }
     }
 
