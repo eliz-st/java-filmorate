@@ -2,23 +2,34 @@ package ru.yandex.practicum.filmorate;
 
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.controller.FilmController;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
+import ru.yandex.practicum.filmorate.storage.mpa.MpaDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class FilmControllerTest {
+
     private final FilmStorage filmStorage = new InMemoryFilmStorage();
     private final UserStorage userStorage = new InMemoryUserStorage();
 
-    private final FilmService filmService = new FilmService(filmStorage, userStorage);
+    private final MpaDbStorage mpaDbStorage = mock(MpaDbStorage.class);
+    private final GenreDbStorage genreDbStorage = mock(GenreDbStorage.class);
+
+    private final FilmService filmService =
+            new FilmService(filmStorage, userStorage, mpaDbStorage, genreDbStorage);
+
     private final FilmController filmController = new FilmController(filmService);
 
     private Film createValidFilm() {
@@ -27,6 +38,14 @@ class FilmControllerTest {
         film.setDescription("Описание фильма");
         film.setReleaseDate(LocalDate.of(2014, 11, 7));
         film.setDuration(169);
+
+        Mpa mpa = new Mpa();
+        mpa.setId(1);
+        mpa.setName("G");
+        film.setMpa(mpa);
+
+        when(mpaDbStorage.getMpaById(1)).thenReturn(mpa);
+
         return film;
     }
 
@@ -41,7 +60,6 @@ class FilmControllerTest {
     @Test
     void shouldCreateFilmWithDescriptionOf200Characters() {
         Film film = createValidFilm();
-
         film.setDescription("а".repeat(200));
 
         assertDoesNotThrow(() -> filmController.createFilm(film));
@@ -50,7 +68,6 @@ class FilmControllerTest {
     @Test
     void shouldNotCreateFilmWithDescriptionOver200Characters() {
         Film film = createValidFilm();
-
         film.setDescription("а".repeat(201));
 
         assertThrows(ValidationException.class, () -> filmController.createFilm(film));
@@ -95,5 +112,4 @@ class FilmControllerTest {
 
         assertThrows(ValidationException.class, () -> filmController.createFilm(film));
     }
-
 }
